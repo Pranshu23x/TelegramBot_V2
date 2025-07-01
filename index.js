@@ -20,11 +20,18 @@ const userMemory = {};
 // GPT Chat handler with memory and streaming
 async function chatWithGPTStream(chatId, prompt, sendChunk) {
   const history = userMemory[chatId] || [];
-  history.push({ role: 'user', content: prompt });
+
+  // Ensure English system message is always first
+  const systemMessage = {
+    role: 'system',
+    content: 'You are a helpful assistant. Always reply in English, even if the user types in another language.',
+  };
+
+  const conversation = [systemMessage, ...history, { role: 'user', content: prompt }];
 
   const result = await streamText({
     model: openai.chat('gpt-4o'),
-    messages: history,
+    messages: conversation,
   });
 
   let reply = '';
@@ -32,6 +39,12 @@ async function chatWithGPTStream(chatId, prompt, sendChunk) {
     reply += chunk;
     await sendChunk(chunk);
   }
+
+  history.push({ role: 'user', content: prompt });
+  history.push({ role: 'assistant', content: reply });
+  userMemory[chatId] = history.slice(-20); // store only recent messages
+}
+
 
   history.push({ role: 'assistant', content: reply });
   userMemory[chatId] = history.slice(-20);

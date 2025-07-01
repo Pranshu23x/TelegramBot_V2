@@ -3,7 +3,7 @@ import TelegramBot from 'node-telegram-bot-api';
 import dotenv from 'dotenv';
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
-import express from 'express'; // <-- added for Render port binding
+import express from 'express'; // For Render port binding
 
 dotenv.config();
 
@@ -45,11 +45,6 @@ async function chatWithGPTStream(chatId, prompt, sendChunk) {
   userMemory[chatId] = history.slice(-20); // store only recent messages
 }
 
-
-  history.push({ role: 'assistant', content: reply });
-  userMemory[chatId] = history.slice(-20);
-}
-
 bot.onText(/\/start/, (msg) => {
   const chatId = msg.chat.id;
   bot.sendMessage(chatId, `
@@ -73,28 +68,39 @@ bot.on('message', async (msg) => {
   try {
     let messageId = null;
     let buffer = '';
+    let lastEditTime = Date.now();
 
     await chatWithGPTStream(chatId, text, async (chunk) => {
       buffer += chunk;
 
       if (!messageId) {
-        const sent = await bot.sendMessage(chatId, chunk);
+        const sent = await bot.sendMessage(chatId, '💬');
         messageId = sent.message_id;
-      } else {
+      }
+
+      // Throttle updates (every 500ms)
+      if (Date.now() - lastEditTime > 500) {
+        lastEditTime = Date.now();
         await bot.editMessageText(buffer, {
           chat_id: chatId,
           message_id: messageId,
         });
       }
     });
+
+    // Final update
+    await bot.editMessageText(buffer, {
+      chat_id: chatId,
+      message_id: messageId,
+    });
+
   } catch (err) {
     console.error(err);
     bot.sendMessage(chatId, '⚠️ GPT error.');
   }
 });
 
-
-// 👇 Add dummy Express server for Render port binding
+// 👇 Dummy Express server for Render
 const app = express();
 const PORT = process.env.PORT || 3000;
 

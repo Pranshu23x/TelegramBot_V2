@@ -1,0 +1,27 @@
+{
+  "name": "openai-telegram-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot using GPT-4o via OpenAI API and Azure Inference",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "keywords": [
+    "telegram",
+    "bot",
+    "gpt4o",
+    "openai",
+    "azure",
+    "ai-sdk"
+  ],
+  "author": "Pranshu",
+  "license": "ISC",
+  "dependencies": {
+    "@ai-sdk/openai": "^1.3.22",
+    "ai": "^4.3.16",
+    "dotenv": "^17.0.0",
+    "express": "^5.1.0",
+    "node-telegram-bot-api": "^0.66.0"
+  }
+}
